@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { useLanguage } from "@/hooks/use-language"
+import { useWallet } from "@/hooks/use-wallet"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -11,21 +12,27 @@ import { toast } from "sonner"
 
 export default function ExchangePage() {
   const { t } = useLanguage()
+  const { isConnected } = useWallet()
   const [fromAmount, setFromAmount] = useState("")
   const [toAmount, setToAmount] = useState("")
   const [fromToken, setFromToken] = useState<"CASE" | "USDT">("CASE")
   const [toToken, setToToken] = useState<"CASE" | "USDT">("USDT")
-  const [isConnected, setIsConnected] = useState(false)
   const [isSwapping, setIsSwapping] = useState(false)
+  const [isAnimating, setIsAnimating] = useState(false)
 
   const exchangeRate = 0.5
   const balance = { CASE: "10,000", USDT: "5,000" }
 
   const handleSwapTokens = () => {
-    setFromToken(toToken)
-    setToToken(fromToken)
-    setFromAmount(toAmount)
-    setToAmount(fromAmount)
+    setIsAnimating(true)
+
+    setTimeout(() => {
+      setFromToken(toToken)
+      setToToken(fromToken)
+      setFromAmount(toAmount)
+      setToAmount(fromAmount)
+      setIsAnimating(false)
+    }, 300)
   }
 
   const handleFromAmountChange = (value: string) => {
@@ -45,11 +52,6 @@ export default function ExchangePage() {
   const handleMaxClick = () => {
     const maxBalance = fromToken === "CASE" ? balance.CASE : balance.USDT
     handleFromAmountChange(maxBalance.replace(",", ""))
-  }
-
-  const handleConnectWallet = () => {
-    setIsConnected(true)
-    toast.success(t.exchange.walletConnected)
   }
 
   const handleSwap = () => {
@@ -99,7 +101,11 @@ export default function ExchangePage() {
           </CardHeader>
           <CardContent className="space-y-4">
             {/* From Token */}
-            <div className="space-y-2">
+            <div
+              className={`space-y-2 transition-all duration-300 ${
+                isAnimating ? "opacity-50 -translate-y-2" : "opacity-100 translate-y-0"
+              }`}
+            >
               <div className="flex items-center justify-between">
                 <Label className="text-sm text-muted-foreground">{t.exchange.from}</Label>
                 {isConnected && (
@@ -143,14 +149,18 @@ export default function ExchangePage() {
                 size="icon"
                 variant="outline"
                 onClick={handleSwapTokens}
-                className="rounded-full h-10 w-10 border-primary/30 hover:bg-primary hover:text-primary-foreground transition-all hover:rotate-180 duration-300 bg-transparent"
+                className="rounded-full h-10 w-10 border-primary/30 hover:bg-primary hover:text-secondary-foreground transition-all hover:rotate-180 duration-300 bg-transparent"
               >
                 <ArrowDownUp className="h-4 w-4" />
               </Button>
             </div>
 
             {/* To Token */}
-            <div className="space-y-2">
+            <div
+              className={`space-y-2 transition-all duration-300 ${
+                isAnimating ? "opacity-50 translate-y-2" : "opacity-100 translate-y-0"
+              }`}
+            >
               <div className="flex items-center justify-between">
                 <Label className="text-sm text-muted-foreground">{t.exchange.to}</Label>
                 {isConnected && (
@@ -189,32 +199,26 @@ export default function ExchangePage() {
             )}
 
             {/* Action Button */}
-            {!isConnected ? (
-              <Button
-                size="lg"
-                onClick={handleConnectWallet}
-                className="w-full h-12 font-semibold shadow-lg transition-transform hover:scale-[1.02] active:scale-[0.98]"
-              >
-                <Wallet className="mr-2 h-5 w-5" />
-                {t.exchange.connectWallet}
-              </Button>
-            ) : (
-              <Button
-                size="lg"
-                onClick={handleSwap}
-                disabled={isSwapping || !fromAmount}
-                className="w-full h-12 font-semibold shadow-lg transition-transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
-              >
-                {isSwapping ? (
-                  <span className="flex items-center gap-2">
-                    <span className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                    {t.exchange.swapping}
-                  </span>
-                ) : (
-                  t.exchange.swapNow
-                )}
-              </Button>
-            )}
+            <Button
+              size="lg"
+              onClick={handleSwap}
+              disabled={!isConnected || isSwapping || !fromAmount}
+              className="w-full h-12 font-semibold shadow-lg transition-transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
+            >
+              {!isConnected ? (
+                <span className="flex items-center gap-2">
+                  <Wallet className="h-5 w-5" />
+                  Connect Wallet in Navbar
+                </span>
+              ) : isSwapping ? (
+                <span className="flex items-center gap-2">
+                  <span className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                  {t.exchange.swapping}
+                </span>
+              ) : (
+                t.exchange.swapNow
+              )}
+            </Button>
           </CardContent>
         </Card>
 

@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { ArrowRight, Sparkles, Copy, Check, Zap, Shield, Users, Globe, TrendingUp, Layers } from "lucide-react"
 import Link from "next/link"
-import { useState } from "react"
+import Image from "next/image"
+import { useState, useEffect } from "react"
 
 export default function HomePage() {
   const { t } = useLanguage()
@@ -19,10 +20,34 @@ export default function HomePage() {
 
   const advantageIcons = [Users, Shield, TrendingUp, Layers, Globe, Zap]
 
+  useEffect(() => {
+    const observerOptions = {
+      root: null,
+      rootMargin: "0px",
+      threshold: 0.1,
+    }
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("animate-in")
+          entry.target.classList.remove("opacity-0", "translate-y-8")
+        }
+      })
+    }, observerOptions)
+
+    const elements = document.querySelectorAll(".scroll-animate")
+    elements.forEach((el) => observer.observe(el))
+
+    return () => {
+      elements.forEach((el) => observer.unobserve(el))
+    }
+  }, [])
+
   return (
     <div className="relative min-h-screen">
       <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
-        <svg className="absolute inset-0 w-full h-full" xmlns="http://www.w3.org/2000/svg">
+        <svg className="absolute inset-0 w-full h-full opacity-30" xmlns="http://www.w3.org/2000/svg">
           <defs>
             <pattern id="hexagons" width="56" height="100" patternUnits="userSpaceOnUse" patternTransform="scale(1.5)">
               <path
@@ -43,36 +68,46 @@ export default function HomePage() {
           </defs>
           <rect width="100%" height="100%" fill="url(#hexagons)" />
         </svg>
-        <div className="absolute left-1/4 top-1/4 h-[500px] w-[500px] rounded-full bg-primary/5 blur-[150px] animate-pulse" />
+        <div className="absolute left-1/4 top-1/4 h-[500px] w-[500px] rounded-full bg-primary/10 blur-[150px] animate-pulse" />
         <div
-          className="absolute right-1/4 bottom-1/4 h-[400px] w-[400px] rounded-full bg-primary/5 blur-[120px] animate-pulse"
+          className="absolute right-1/4 bottom-1/4 h-[400px] w-[400px] rounded-full bg-primary/10 blur-[120px] animate-pulse"
           style={{ animationDelay: "1s" }}
         />
       </div>
 
       {/* Hero Section */}
-      <section className="min-h-[85vh] flex items-center justify-center px-4 py-12">
-        <div className="max-w-3xl text-center space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-primary/30 bg-primary/5 text-primary text-sm font-medium">
+      <section className="min-h-[90vh] flex items-center justify-center px-4 py-12">
+        <div className="max-w-4xl text-center space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+          <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border border-primary/40 bg-primary/10 text-primary text-sm font-semibold shadow-lg shadow-primary/10">
             <Sparkles className="h-4 w-4" />
             {t.hero.welcome}
           </div>
 
-          <h1 className="text-5xl sm:text-6xl md:text-7xl font-bold text-primary tracking-tight">{t.hero.title}</h1>
+          <h1 className="text-6xl sm:text-7xl md:text-8xl font-bold text-primary tracking-tight leading-tight">
+            {t.hero.title}
+          </h1>
 
-          <p className="text-xl sm:text-2xl text-foreground font-medium">{t.hero.subtitle}</p>
+          <p className="text-2xl sm:text-3xl text-foreground/90 font-semibold">{t.hero.subtitle}</p>
 
-          <p className="text-base text-muted-foreground max-w-2xl mx-auto leading-relaxed">{t.hero.description}</p>
+          <p className="text-lg text-muted-foreground max-w-3xl mx-auto leading-relaxed">{t.hero.description}</p>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center pt-2">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
             <Link href="/exchange">
               <Button
                 size="lg"
-                variant="outline"
-                className="w-full sm:w-auto text-base font-semibold h-12 px-8 bg-transparent hover:text-white"
+                className="w-full sm:w-auto text-base font-semibold h-14 px-10 shadow-xl shadow-primary/25 hover:shadow-2xl hover:shadow-primary/30 transition-all"
               >
                 {t.nav.exchange}
                 <ArrowRight className="ml-2 h-5 w-5" />
+              </Button>
+            </Link>
+            <Link href="/airdrop">
+              <Button
+                size="lg"
+                variant="outline"
+                className="w-full sm:w-auto text-base font-semibold h-14 px-10 bg-transparent hover:bg-primary hover:text-primary-foreground border-primary/30 hover:border-primary transition-all"
+              >
+                {t.nav.airdrop}
               </Button>
             </Link>
           </div>
@@ -80,31 +115,46 @@ export default function HomePage() {
       </section>
 
       {/* Mission Section */}
-      <section className="px-4 py-16">
-        <div className="max-w-4xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700">
-          <h2 className="text-3xl sm:text-4xl font-bold text-primary text-center mb-3">{t.mission.title}</h2>
-          <p className="text-muted-foreground text-center mb-10 max-w-2xl mx-auto">{t.mission.subtitle}</p>
-          <div className="grid sm:grid-cols-3 gap-4">
+      <section className="px-4 py-24 bg-linear-to-b from-transparent via-primary/5 to-transparent scroll-animate opacity-0 translate-y-8 transition-all duration-700">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl sm:text-5xl font-bold text-primary mb-4">{t.mission.title}</h2>
+            <p className="text-lg text-muted-foreground max-w-3xl mx-auto leading-relaxed">{t.mission.subtitle}</p>
+          </div>
+
+          <div className="grid lg:grid-cols-3 gap-8">
             {[t.mission.point1, t.mission.point2, t.mission.point3].map((point, idx) => (
-              <Card key={idx} className="group hover:border-primary/50 transition-colors duration-300">
-                <CardContent className="p-5 flex flex-col items-center text-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold group-hover:scale-110 transition-transform duration-300">
-                    {idx + 1}
+              <div
+                key={idx}
+                className="group relative overflow-hidden rounded-2xl border border-primary/20 bg-linear-to-br from-card via-card to-primary/5 hover:border-primary/40 transition-all duration-500 hover:shadow-2xl hover:shadow-primary/10"
+              >
+                <div className="p-8">
+                  <div className="w-20 h-20 rounded-2xl bg-primary/15 flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-primary/25 transition-all duration-500 shadow-lg">
+                    <Image
+                      src={`/img-${idx + 1}.png`}
+                      alt={`Mission icon ${idx + 1}`}
+                      width={48}
+                      height={48}
+                      className="object-contain"
+                    />
                   </div>
-                  <p className="text-sm text-muted-foreground leading-relaxed">{point}</p>
-                </CardContent>
-              </Card>
+                  <p className="text-base text-foreground/80 leading-relaxed">{point}</p>
+                </div>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
       {/* Advantages Section */}
-      <section className="px-4 py-16">
-        <div className="max-w-5xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700">
-          <h2 className="text-3xl sm:text-4xl font-bold text-primary text-center mb-3">{t.advantages.title}</h2>
-          <p className="text-muted-foreground text-center mb-10 max-w-2xl mx-auto">{t.advantages.subtitle}</p>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <section className="px-4 py-24 scroll-animate opacity-0 translate-y-8 transition-all duration-700">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl sm:text-5xl font-bold text-primary mb-4">{t.advantages.title}</h2>
+            <p className="text-lg text-muted-foreground max-w-3xl mx-auto leading-relaxed">{t.advantages.subtitle}</p>
+          </div>
+
+          <div className="space-y-6">
             {[
               { title: t.advantages.clear, desc: t.advantages.clearDesc },
               { title: t.advantages.decentral, desc: t.advantages.decentralDesc },
@@ -115,29 +165,38 @@ export default function HomePage() {
             ].map((item, idx) => {
               const Icon = advantageIcons[idx]
               return (
-                <Card key={idx} className="group hover:border-primary/50 transition-all duration-300">
-                  <CardContent className="p-5">
-                    <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300">
-                      <Icon className="h-5 w-5 text-primary" />
-                    </div>
-                    <h3 className="font-semibold text-foreground mb-2">{item.title}</h3>
-                    <p className="text-sm text-muted-foreground">{item.desc}</p>
-                  </CardContent>
-                </Card>
+                <div
+                  key={idx}
+                  className="group flex items-start gap-6 p-6 rounded-2xl border-l-4 border-primary/40 bg-linear-to-r from-primary/5 to-transparent hover:border-primary hover:from-primary/10 transition-all duration-500"
+                >
+                  <div className="shrink-0 w-16 h-16 rounded-xl bg-primary/15 flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-primary/25 transition-all duration-500 shadow-lg">
+                    <Icon className="h-8 w-8 text-primary" />
+                  </div>
+                  <div className="flex-1 min-w-0 pt-2">
+                    <h3 className="font-bold text-xl text-foreground mb-3 group-hover:text-primary transition-colors">
+                      {item.title}
+                    </h3>
+                    <p className="text-base text-muted-foreground leading-relaxed">{item.desc}</p>
+                  </div>
+                </div>
               )
             })}
           </div>
         </div>
       </section>
 
-      <section className="px-4 py-16">
-        <div className="max-w-5xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700">
-          <h2 className="text-3xl sm:text-4xl font-bold text-primary text-center mb-3">{t.roadmap.title}</h2>
-          <p className="text-muted-foreground text-center mb-10 max-w-2xl mx-auto">{t.roadmap.subtitle}</p>
+      {/* Roadmap Section */}
+      <section className="px-4 py-24 bg-linear-to-b from-transparent via-primary/5 to-transparent scroll-animate opacity-0 translate-y-8 transition-all duration-700">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl sm:text-5xl font-bold text-primary mb-4">{t.roadmap.title}</h2>
+            <p className="text-lg text-muted-foreground max-w-3xl mx-auto leading-relaxed">{t.roadmap.subtitle}</p>
+          </div>
+
           <div className="relative">
-            
-            <div className="hidden lg:block absolute top-3 left-0 right-0 h-px bg-primary/30" />
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            <div className="hidden lg:block absolute top-8 left-0 right-0 h-1 bg-linear-to-r from-transparent via-primary/30 to-transparent" />
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
               {[
                 { date: t.roadmap.jun2025, desc: t.roadmap.jun2025desc },
                 { date: t.roadmap.jul2025, desc: t.roadmap.jul2025desc },
@@ -145,20 +204,20 @@ export default function HomePage() {
                 { date: t.roadmap.jan2026, desc: t.roadmap.jan2026desc },
                 { date: t.roadmap.later, desc: t.roadmap.laterdesc },
               ].map((item, idx) => (
-                <div key={idx} className="relative group lg:pt-10">
-                  
-                  <div className="hidden lg:flex absolute top-0 left-1/2 -translate-x-1/2 w-6 h-6 rounded-full bg-background border-2 border-primary items-center justify-center group-hover:scale-125 transition-transform duration-300">
-                    <div className="w-2 h-2 rounded-full bg-primary" />
+                <div key={idx} className="relative group lg:pt-16">
+                  <div className="hidden lg:flex absolute top-5 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-primary border-4 border-background items-center justify-center group-hover:scale-125 transition-transform duration-300 shadow-lg shadow-primary/50 z-10">
+                    <div className="w-3 h-3 rounded-full bg-background animate-pulse" />
                   </div>
-                  <Card className="h-full hover:border-primary/50 transition-colors duration-300">
-                    <CardContent className="p-4">
-                      <div className="flex items-center gap-2 mb-2 lg:justify-center">
-                        <div className="lg:hidden w-2 h-2 rounded-full bg-primary" />
-                        <span className="text-sm font-bold text-primary">{item.date}</span>
-                      </div>
-                      <p className="text-xs text-muted-foreground leading-relaxed lg:text-center">{item.desc}</p>
-                    </CardContent>
-                  </Card>
+
+                  <div className="relative rounded-2xl border border-primary/20 bg-card p-6 hover:border-primary/40 transition-all duration-500 hover:shadow-xl hover:shadow-primary/10 h-full">
+                    <div className="flex lg:flex-col items-center lg:items-start gap-3 mb-3">
+                      <div className="lg:hidden w-3 h-3 rounded-full bg-primary shadow-lg shadow-primary/50" />
+                      <span className="text-sm font-bold text-primary bg-primary/10 px-3 py-1.5 rounded-full">
+                        {item.date}
+                      </span>
+                    </div>
+                    <p className="text-sm text-muted-foreground leading-relaxed lg:text-center">{item.desc}</p>
+                  </div>
                 </div>
               ))}
             </div>
@@ -166,94 +225,129 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Token Info Section */}
-      <section className="px-4 py-16">
-        <div className="max-w-4xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700">
-          <h2 className="text-3xl sm:text-4xl font-bold text-primary text-center mb-3">{t.economics.title}</h2>
-          <p className="text-muted-foreground text-center mb-10 max-w-2xl mx-auto text-sm leading-relaxed">
-            {t.economics.description}
-          </p>
+      {/* Economics Section */}
+      <section className="px-4 py-24 scroll-animate opacity-0 translate-y-8 transition-all duration-700">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl sm:text-5xl font-bold text-primary mb-4">{t.economics.title}</h2>
+            <p className="text-lg text-muted-foreground max-w-3xl mx-auto leading-relaxed">{t.economics.description}</p>
+          </div>
 
-          {/* Token Stats Card */}
-          <Card className="mb-6 overflow-hidden">
-            <CardContent className="p-0">
-              <div className="grid grid-cols-3 divide-x divide-border">
-                {[
-                  { label: "Symbol", value: "CasE" },
-                  { label: "Precision", value: "18" },
-                  { label: "Supply", value: "3.5B" },
-                ].map((stat, idx) => (
-                  <div key={idx} className="p-5 text-center hover:bg-muted/50 transition-colors duration-300">
-                    <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">{stat.label}</p>
-                    <p className="text-xl font-bold text-primary">{stat.value}</p>
-                  </div>
-                ))}
-              </div>
-              <div className="border-t border-border p-5">
-                <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2">Contract Address</p>
-                <div className="flex items-center gap-2">
-                  <code className="flex-1 text-xs sm:text-sm font-mono text-foreground bg-muted px-3 py-2 rounded-lg overflow-x-auto">
+          <div className="grid lg:grid-cols-2 gap-8 mb-12">
+            <Card className="border-primary/20 bg-linear-to-br from-card to-primary/5 shadow-xl overflow-hidden group hover:shadow-2xl hover:shadow-primary/10 transition-all duration-500">
+              <CardContent className="p-8">
+                <h3 className="text-xl font-bold text-primary mb-6">Token Details</h3>
+                <div className="space-y-4">
+                  {[
+                    { label: "Symbol", value: "CasE" },
+                    { label: "Precision", value: "18" },
+                    { label: "Total Supply", value: "3.5B" },
+                  ].map((stat, idx) => (
+                    <div
+                      key={idx}
+                      className="flex items-center justify-between p-4 rounded-xl bg-background/50 hover:bg-primary/5 transition-colors"
+                    >
+                      <span className="text-sm text-muted-foreground font-medium">{stat.label}</span>
+                      <span className="text-2xl font-bold text-primary">{stat.value}</span>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-primary/20 bg-linear-to-br from-card to-primary/5 shadow-xl overflow-hidden group hover:shadow-2xl hover:shadow-primary/10 transition-all duration-500">
+              <CardContent className="p-8">
+                <h3 className="text-xl font-bold text-primary mb-6">Contract Address</h3>
+                <div className="space-y-4">
+                  <code className="block text-xs sm:text-sm font-mono text-foreground bg-background/50 px-4 py-4 rounded-xl overflow-x-auto break-all leading-relaxed">
                     0x034b070a87d61e945148728f81be810310d2db7e2
                   </code>
                   <Button
-                    size="icon"
-                    variant="outline"
                     onClick={handleCopy}
-                    className="shrink-0 h-9 w-9 bg-transparent"
+                    variant="outline"
+                    className="w-full h-12 font-semibold border-primary/30 hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all bg-transparent"
                   >
-                    {copied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+                    {copied ? (
+                      <>
+                        <Check className="mr-2 h-5 w-5 text-green-500" />
+                        Copied!
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="mr-2 h-5 w-5" />
+                        Copy Address
+                      </>
+                    )}
                   </Button>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </div>
 
-          {/* Exchanges */}
-          <h3 className="text-lg font-semibold text-foreground text-center mb-4">{t.economics.tradeTitle}</h3>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            {[
-              { name: "UniSwap", desc: t.economics.uniswapDesc },
-              { name: "QuickSwap", desc: t.economics.quickswapDesc },
-              { name: "SushiSwap", desc: t.economics.sushiswapDesc },
-              { name: "LBank", desc: t.economics.lbankDesc },
-            ].map((exchange, idx) => (
-              <Card key={idx} className="group hover:border-primary/50 transition-all duration-300 h-full">
-                <CardContent className="p-4 flex flex-col h-full">
-                  <h4 className="font-bold text-primary mb-1 text-center">{exchange.name}</h4>
-                  <p className="text-xs text-muted-foreground mb-3 line-clamp-2 text-center flex-1">{exchange.desc}</p>
-                  <Button size="sm" className="w-full text-xs mt-auto">
-                    {t.economics.trade}
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
+          <div>
+            <h3 className="text-2xl font-bold text-center text-foreground mb-8">{t.economics.tradeTitle}</h3>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              {[
+                { name: "UniSwap", desc: t.economics.uniswapDesc },
+                { name: "QuickSwap", desc: t.economics.quickswapDesc },
+                { name: "SushiSwap", desc: t.economics.sushiswapDesc },
+                { name: "LBank", desc: t.economics.lbankDesc },
+              ].map((exchange, idx) => (
+                <Card
+                  key={idx}
+                  className="group border-primary/20 hover:border-primary/40 transition-all duration-500 hover:-translate-y-2 hover:shadow-xl hover:shadow-primary/10 h-full"
+                >
+                  <CardContent className="p-5 flex flex-col h-full">
+                    <h4 className="font-bold text-primary mb-2 text-center text-lg group-hover:scale-105 transition-transform">
+                      {exchange.name}
+                    </h4>
+                    <p className="text-xs text-muted-foreground mb-4 text-center flex-1 leading-relaxed">
+                      {exchange.desc}
+                    </p>
+                    <Button
+                      size="sm"
+                      className="w-full text-xs font-semibold shadow-lg hover:shadow-xl transition-shadow"
+                    >
+                      {t.economics.trade}
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
       {/* CTA Section */}
-      <section className="px-4 py-16">
-        <div className="max-w-2xl mx-auto text-center animate-in fade-in slide-in-from-bottom-4 duration-700">
-          <Card className="border-primary/30 bg-linear-to-br from-primary/10 via-primary/5 to-transparent">
-            <CardContent className="p-8">
-              <h2 className="text-2xl sm:text-3xl font-bold text-primary mb-3">
+      <section className="px-4 py-24 scroll-animate opacity-0 translate-y-8 transition-all duration-700">
+        <div className="max-w-4xl mx-auto">
+          <div className="relative rounded-3xl border border-primary/30 bg-linear-to-br from-primary/10 via-primary/5 to-transparent p-12 text-center overflow-hidden shadow-2xl hover:shadow-primary/20 transition-shadow duration-500">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl" />
+            <div className="absolute bottom-0 left-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl" />
+
+            <div className="relative z-10 space-y-6">
+              <h2 className="text-3xl sm:text-4xl font-bold text-primary">
                 {t.hero.welcome} {t.hero.title}
               </h2>
-              <p className="text-muted-foreground mb-6">{t.hero.subtitle}</p>
-              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <p className="text-xl text-muted-foreground max-w-2xl mx-auto">{t.hero.subtitle}</p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
                 <Link href="/exchange">
-                  <Button size="lg" className="w-full sm:w-auto h-11 px-6 ">
+                  <Button size="lg" className="w-full sm:w-auto h-12 px-8 font-semibold shadow-xl shadow-primary/25">
                     {t.nav.exchange}
                   </Button>
                 </Link>
                 <Link href="/airdrop">
-                  <Button variant="outline" size="lg" className="w-full sm:w-auto h-11 px-6 bg-transparent hover:text-white">
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    className="w-full sm:w-auto h-12 px-8 font-semibold bg-transparent hover:bg-primary hover:text-primary-foreground border-primary/30"
+                  >
                     {t.nav.airdrop}
                   </Button>
                 </Link>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
       </section>
     </div>

@@ -5,24 +5,11 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Gift, Clock, Bell, CheckCircle2, ArrowRight } from "lucide-react"
 import { toast } from "sonner"
-import { useEffect, useState, useRef } from "react"
+import { useState } from "react"
 
 export default function AirdropPage() {
   const { t } = useLanguage()
   const [isSubscribed, setIsSubscribed] = useState(false)
-  const toastShown = useRef(false)
-
-  useEffect(() => {
-    if (!toastShown.current) {
-      toastShown.current = true
-      toast.info(t.airdrop.notOpen, {
-        description: t.airdrop.description,
-        duration: 5000,
-        position: "top-center",
-      })
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
 
   const handleSubscribe = () => {
     setIsSubscribed(true)

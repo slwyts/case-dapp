@@ -3,11 +3,9 @@ import type { Metadata } from "next"
 import { Geist, Geist_Mono, Playfair_Display } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import "./globals.css"
-import { LanguageProvider } from "@/hooks/use-language"
-import { ThemeProvider } from "@/hooks/use-theme"
+import { Providers } from "./providers"
 import { Navigation } from "@/components/navigation"
 import { Footer } from "@/components/footer"
-import { Toaster } from "@/components/ui/sonner"
 
 const geist = Geist({ subsets: ["latin"], variable: "--font-geist" })
 const geistMono = Geist_Mono({ subsets: ["latin"], variable: "--font-geist-mono" })
@@ -20,7 +18,7 @@ const playfair = Playfair_Display({
 export const metadata: Metadata = {
   title: "Local Life DAO - CasE Token Platform",
   description: "Decentralized local life ecosystem platform powered by Web3",
-  }
+}
 
 export default function RootLayout({
   children,
@@ -28,17 +26,14 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning className="dark">
       <body className={`${geist.variable} ${geistMono.variable} ${playfair.variable} font-sans antialiased`}>
-        <ThemeProvider>
-          <LanguageProvider>
-            <Navigation />
-            <main className="pt-16">{children}</main>
-            <Footer />
-            <Toaster position="top-center" closeButton/>
-            <Analytics />
-          </LanguageProvider>
-        </ThemeProvider>
+        <Providers>
+          <Navigation />
+          <main className="pt-16">{children}</main>
+          <Footer />
+          <Analytics />
+        </Providers>
       </body>
     </html>
   )

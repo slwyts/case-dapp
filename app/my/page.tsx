@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { useLanguage } from "@/hooks/use-language"
+import { useWallet } from "@/hooks/use-wallet"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -11,6 +12,7 @@ import { Copy, ExternalLink, Wallet, ArrowUpRight, ArrowDownLeft, RefreshCw, X, 
 import { toast } from "sonner"
 import Link from "next/link"
 import QRCode from "react-qr-code"
+import { cn } from "@/lib/utils"
 import type { TranslationKey } from "@/lib/i18n"
 
 interface ReceiveModalProps {
@@ -23,30 +25,24 @@ interface ReceiveModalProps {
   fullAddress: string
 }
 
-function ReceiveModal({
-  showReceive,
-  receiveAnimating,
-  onClose,
-  onCopy,
-  copied,
-  t,
-  fullAddress,
-}: ReceiveModalProps) {
+function ReceiveModal({ showReceive, receiveAnimating, onClose, onCopy, copied, t, fullAddress }: ReceiveModalProps) {
   if (!showReceive) return null
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div
-        className={`absolute inset-0 bg-black/80 backdrop-blur-sm transition-opacity duration-300 ease-out ${
-          receiveAnimating ? "opacity-100" : "opacity-0"
-        }`}
+        className={cn(
+          "absolute inset-0 bg-black/80 backdrop-blur-sm transition-opacity duration-300 ease-out",
+          receiveAnimating ? "opacity-100" : "opacity-0",
+        )}
         onClick={onClose}
       />
 
       <Card
-        className={`relative w-full max-w-md border-primary/30 bg-card shadow-2xl transition-all duration-300 ease-out ${
-          receiveAnimating ? "opacity-100 scale-100 translate-y-0" : "opacity-0 scale-95 translate-y-4"
-        }`}
+        className={cn(
+          "relative w-full max-w-md border-primary/30 bg-card shadow-2xl transition-all duration-300 ease-out",
+          receiveAnimating ? "opacity-100 scale-100 translate-y-0" : "opacity-0 scale-95 translate-y-4",
+        )}
       >
         <CardHeader className="relative border-b border-border pb-4">
           <CardTitle className="text-xl text-primary flex items-center gap-2">
@@ -124,16 +120,18 @@ function SendModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div
-        className={`absolute inset-0 bg-black/80 backdrop-blur-sm transition-opacity duration-300 ease-out ${
-          sendAnimating ? "opacity-100" : "opacity-0"
-        }`}
+        className={cn(
+          "absolute inset-0 bg-black/80 backdrop-blur-sm transition-opacity duration-300 ease-out",
+          sendAnimating ? "opacity-100" : "opacity-0",
+        )}
         onClick={onClose}
       />
 
       <Card
-        className={`relative w-full max-w-md border-primary/30 bg-card shadow-2xl transition-all duration-300 ease-out ${
-          sendAnimating ? "opacity-100 scale-100 translate-y-0" : "opacity-0 scale-95 translate-y-4"
-        }`}
+        className={cn(
+          "relative w-full max-w-md border-primary/30 bg-card shadow-2xl transition-all duration-300 ease-out",
+          sendAnimating ? "opacity-100 scale-100 translate-y-0" : "opacity-0 scale-95 translate-y-4",
+        )}
       >
         <CardHeader className="relative border-b border-border pb-4">
           <CardTitle className="text-xl text-primary flex items-center gap-2">
@@ -219,7 +217,7 @@ function SendModal({
 
 export default function MyPage() {
   const { t } = useLanguage()
-  const [isConnected, setIsConnected] = useState(false)
+  const { isConnected, walletAddress, connectWallet } = useWallet()
   const [showReceive, setShowReceive] = useState(false)
   const [showSend, setShowSend] = useState(false)
   const [sendAddress, setSendAddress] = useState("")
@@ -228,14 +226,14 @@ export default function MyPage() {
   const [receiveAnimating, setReceiveAnimating] = useState(false)
   const [sendAnimating, setSendAnimating] = useState(false)
 
-  const walletAddress = "0x1234...5678"
+  const displayAddress = walletAddress || "0x1234...5678"
   const fullAddress = "0x1234567890abcdef1234567890abcdef12345678"
   const balance = "12,500.50"
 
   const transactions = [
-    { id: 1, type: "swap", amount: "+1,000 CASE", time: "2025-12-16 10:30:00", status: "completed" },
-    { id: 2, type: "receive", amount: "+500 CASE", time: "2025-12-15 15:20:00", status: "completed" },
-    { id: 3, type: "send", amount: "-250 CASE", time: "2025-12-14 09:15:00", status: "completed" },
+    { id: 1, type: "swap", amount: "+1,000 CASE", time: "2025-12-16 10:30:00", status: "Completed" },
+    { id: 2, type: "receive", amount: "+500 CASE", time: "2025-12-15 15:20:00", status: "Completed" },
+    { id: 3, type: "send", amount: "-250 CASE", time: "2025-12-14 09:15:00", status: "Completed" },
   ]
 
   const openReceiveModal = () => {
@@ -265,11 +263,6 @@ export default function MyPage() {
     setTimeout(() => setCopied(false), 2000)
   }
 
-  const handleConnectWallet = () => {
-    setIsConnected(true)
-    toast.success(t.my.walletConnected)
-  }
-
   const handleSend = () => {
     if (!sendAddress || !sendAmount) {
       toast.error(t.my.fillAllFields)
@@ -295,9 +288,9 @@ export default function MyPage() {
             </div>
             <div className="space-y-2">
               <h2 className="text-3xl font-bold text-primary">{t.my.title}</h2>
-              <p className="text-base text-muted-foreground">{t.my.connectDescription}</p>
+              <p className="text-base text-muted-foreground">Please connect your wallet in the navigation bar</p>
             </div>
-            <Button size="lg" onClick={handleConnectWallet} className="w-full font-semibold shadow-lg">
+            <Button size="lg" onClick={connectWallet} className="w-full font-semibold shadow-lg">
               <Wallet className="mr-2 h-5 w-5" />
               {t.my.connectWallet}
             </Button>
@@ -336,11 +329,6 @@ export default function MyPage() {
       />
 
       <div className="container mx-auto max-w-4xl space-y-6">
-        <div className="text-center space-y-2 mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold text-primary">{t.my.title}</h1>
-          <p className="text-sm text-muted-foreground">{t.my.viewWallet}</p>
-        </div>
-
         <Card className="border-primary/20 bg-linear-to-br from-primary/5 to-transparent">
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-lg text-primary">
@@ -351,7 +339,7 @@ export default function MyPage() {
           <CardContent className="space-y-4">
             <div className="flex items-center gap-2">
               <code className="flex-1 text-sm font-mono bg-muted/50 px-3 py-2 rounded-lg text-foreground">
-                {walletAddress}
+                {displayAddress}
               </code>
               <Button
                 size="icon"
@@ -372,7 +360,7 @@ export default function MyPage() {
               <Link href="/exchange" className="block">
                 <Button
                   variant="outline"
-                  className="w-full flex-col h-auto py-3 bg-transparent hover:bg-primary hover:text-primary-foreground transition-colors"
+                  className="w-full flex-col h-auto py-3 bg-transparent hover:bg-primary hover:text-secondary-foreground transition-colors"
                 >
                   <RefreshCw className="h-4 w-4 mb-1" />
                   <span className="text-xs">{t.my.swap}</span>
@@ -381,7 +369,7 @@ export default function MyPage() {
               <Button
                 variant="outline"
                 onClick={openReceiveModal}
-                className="w-full flex-col h-auto py-3 bg-transparent hover:bg-primary hover:text-primary-foreground transition-colors"
+                className="w-full flex-col h-auto py-3 bg-transparent hover:bg-primary hover:text-secondary-foreground transition-colors"
               >
                 <ArrowDownLeft className="h-4 w-4 mb-1" />
                 <span className="text-xs">{t.my.receive}</span>
@@ -389,7 +377,7 @@ export default function MyPage() {
               <Button
                 variant="outline"
                 onClick={openSendModal}
-                className="w-full flex-col h-auto py-3 bg-transparent hover:bg-primary hover:text-primary-foreground transition-colors"
+                className="w-full flex-col h-auto py-3 bg-transparent hover:bg-primary hover:text-secondary-foreground transition-colors"
               >
                 <ArrowUpRight className="h-4 w-4 mb-1" />
                 <span className="text-xs">{t.my.send}</span>

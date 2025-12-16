@@ -1,9 +1,15 @@
 "use client"
 
 import { useLanguage } from "@/hooks/use-language"
+import { usePathname } from "next/navigation"
 
 export function Footer() {
   const { t } = useLanguage()
+  const pathname = usePathname()
+
+  if (pathname !== "/") {
+    return null
+  }
 
   return (
     <footer className="bg-muted/50 backdrop-blur-xl border-t border-gold/20 mt-24">
