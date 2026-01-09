@@ -86,7 +86,7 @@ export default function AirdropPage() {
       </section>
 
       {/* Subscribe CTA */}
-      <section className="px-4 py-12">
+      {/* <section className="px-4 py-12">
         <div
           className="max-w-md mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700"
           style={{ animationDelay: "300ms" }}
@@ -125,7 +125,7 @@ export default function AirdropPage() {
             </CardContent>
           </Card>
         </div>
-      </section>
+      </section> */}
 
       {/* Info */}
       <section className="px-4 py-12">

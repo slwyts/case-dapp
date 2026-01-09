@@ -288,7 +288,7 @@ export default function MyPage() {
             </div>
             <div className="space-y-2">
               <h2 className="text-3xl font-bold text-primary">{t.my.title}</h2>
-              <p className="text-base text-muted-foreground">Please connect your wallet in the navigation bar</p>
+              <p className="text-base text-muted-foreground">{t.my.connectWalletHint}</p>
             </div>
             <Button size="lg" onClick={connectWallet} className="w-full font-semibold shadow-lg">
               <Wallet className="mr-2 h-5 w-5" />

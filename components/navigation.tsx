@@ -106,7 +106,7 @@ export function Navigation() {
                 ) : (
                   <>
                     <Wallet className="mr-1 h-3 w-3 sm:h-4 sm:w-4" />
-                    Connect Wallet
+                    {t.nav.connectWallet}
                   </>
                 )}
               </Button>
@@ -246,7 +246,7 @@ export function Navigation() {
                 ) : (
                   <>
                     <Wallet className="mr-2 h-4 w-4" />
-                    Connect Wallet
+                    {t.nav.connectWallet}
                   </>
                 )}
               </Button>

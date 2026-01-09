@@ -12,6 +12,7 @@ export const translations = {
       airdrop: "Airdrop",
       exchange: "Exchange",
       my: "My",
+      connectWallet: "Connect Wallet",
     },
     hero: {
       welcome: "Welcome to",
@@ -172,6 +173,7 @@ export const translations = {
       explorer: "Chain Browser",
       noTransactions: "No transactions yet",
       connectWallet: "Connect Wallet",
+      connectWalletHint: "Please connect your wallet in the navigation bar",
       swap: "Swap",
       receive: "Receive",
       send: "Send",
@@ -205,6 +207,7 @@ export const translations = {
       airdrop: "空投",
       exchange: "兑换",
       my: "我的",
+      connectWallet: "连接钱包",
     },
     hero: {
       welcome: "欢迎来到",
@@ -362,6 +365,7 @@ export const translations = {
       explorer: "链浏览器",
       noTransactions: "暂无交易记录",
       connectWallet: "连接钱包",
+      connectWalletHint: "请在导航栏中连接您的钱包",
       swap: "兑换",
       receive: "接收",
       send: "发送",
