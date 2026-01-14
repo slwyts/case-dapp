@@ -80,7 +80,7 @@ function TokenSelector({
             className="fixed inset-0 z-[100]" 
             onClick={() => setIsOpen(false)} 
           />
-          <div className="absolute top-full mt-1 left-0 right-0 z-[101] bg-card border border-primary/30 rounded-lg shadow-2xl overflow-hidden">
+          <div className="absolute top-full mt-1 left-0 right-0 z-[101] bg-card border border-primary/30 rounded-lg shadow-2xl overflow-hidden animate-slide-down">
             {availableTokens.map((t) => {
               return (
                 <button
@@ -89,7 +89,7 @@ function TokenSelector({
                     onSelect(t)
                     setIsOpen(false)
                   }}
-                  className="w-full flex items-center gap-2 px-3 py-2 hover:bg-primary/10 transition-colors text-left"
+                  className="w-full flex items-center gap-2 px-3 py-2 hover:bg-primary/10 hover:scale-[1.02] active:scale-[0.98] transition-all text-left"
                 >
                   <TokenIcon token={t} size={20} />
                   <span className="font-medium text-sm">{t}</span>
@@ -335,7 +335,8 @@ export default function ExchangePage() {
                 variant="outline"
                 onClick={handleSwapTokens}
                 disabled={isSwapping || isApproving}
-                className="rounded-full h-10 w-10 border-primary/30 hover:bg-primary hover:text-secondary-foreground transition-all hover:rotate-180 duration-300 bg-transparent"
+                className="rounded-full h-10 w-10 border-primary/30 hover:bg-primary hover:text-secondary-foreground hover:rotate-180 hover:shadow-lg hover:shadow-primary/30 bg-transparent"
+                style={{ transition: "all 0.5s cubic-bezier(0.65, 0.05, 0.1, 1)" }}
               >
                 <ArrowDownUp className="h-4 w-4" />
               </Button>

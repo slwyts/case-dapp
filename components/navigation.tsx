@@ -41,8 +41,8 @@ export function Navigation() {
   ]
 
   const quickLinks = [
-    { href: "https://locdao.life", label: t.my.mainSite, external: true },
-    { href: "https://polygonscan.com", label: t.my.explorer, external: true },
+    { href: "https://www.locdao.life", label: t.my.mainSite, external: true },
+    { href: "https://www.polygonscan.com", label: t.my.explorer, external: true },
   ]
 
   const handleWalletAction = () => {
@@ -162,25 +162,28 @@ export function Navigation() {
 
       <div
         className={cn(
-          "fixed inset-0 z-40 md:hidden transition-all duration-300",
+          "fixed inset-0 z-40 md:hidden",
           mobileMenuOpen ? "visible" : "invisible",
         )}
+        style={{ transition: "visibility 0.4s cubic-bezier(0.65, 0.05, 0.1, 1)" }}
       >
         {/* Backdrop */}
         <div
           className={cn(
-            "absolute inset-0 bg-black/70 backdrop-blur-sm transition-opacity duration-300",
+            "absolute inset-0 bg-black/70 backdrop-blur-sm",
             mobileMenuOpen ? "opacity-100" : "opacity-0",
           )}
+          style={{ transition: "opacity 0.4s cubic-bezier(0.65, 0.05, 0.1, 1)" }}
           onClick={() => setMobileMenuOpen(false)}
         />
 
         {/* Menu Panel */}
         <div
           className={cn(
-            "absolute left-0 top-0 bottom-0 w-80 max-w-[85vw] bg-background/98 backdrop-blur-xl border-r border-primary/20 transition-transform duration-300 flex flex-col shadow-2xl",
+            "absolute left-0 top-0 bottom-0 w-80 max-w-[85vw] bg-background/98 backdrop-blur-xl border-r border-primary/20 flex flex-col shadow-2xl",
             mobileMenuOpen ? "translate-x-0" : "-translate-x-full",
           )}
+          style={{ transition: "transform 0.4s cubic-bezier(0.65, 0.05, 0.1, 1)" }}
         >
           {/* Menu Header */}
           <div className="flex items-center justify-between p-6 border-b border-primary/20 bg-primary/5">
@@ -193,21 +196,33 @@ export function Navigation() {
           <div className="flex-1 overflow-y-auto p-6 space-y-6">
             {/* Main Navigation Links */}
             <div>
-              <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 px-2">
+              <h3 
+                className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 px-2"
+                style={{
+                  opacity: mobileMenuOpen ? 1 : 0,
+                  transform: mobileMenuOpen ? "translateY(0)" : "translateY(-10px)",
+                  transition: "all 0.35s cubic-bezier(0.65, 0.05, 0.1, 1) 0.1s",
+                }}
+              >
                 {t.nav.home}
               </h3>
               <div className="flex flex-col gap-1">
-                {navLinks.map((link) => (
+                {navLinks.map((link, index) => (
                   <Link
                     key={link.href}
                     href={link.href}
                     onClick={handleNavigation}
                     className={cn(
-                      "text-sm font-medium transition-all duration-200 px-4 py-3 rounded-lg flex items-center justify-between group",
+                      "text-sm font-medium px-4 py-3 rounded-lg flex items-center justify-between group",
                       pathname === link.href
                         ? "text-primary bg-primary/15 border border-primary/30 shadow-sm"
                         : "text-foreground/70 hover:text-primary hover:bg-primary/5 border border-transparent",
                     )}
+                    style={{
+                      opacity: mobileMenuOpen ? 1 : 0,
+                      transform: mobileMenuOpen ? "translateY(0)" : "translateY(-10px)",
+                      transition: "all 0.35s cubic-bezier(0.65, 0.05, 0.1, 1) 0.1s",
+                    }}
                   >
                     <span>{link.label}</span>
                     <ChevronRight
@@ -223,17 +238,29 @@ export function Navigation() {
 
             {/* Quick Links Section */}
             <div>
-              <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 px-2">
+              <h3 
+                className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 px-2"
+                style={{
+                  opacity: mobileMenuOpen ? 1 : 0,
+                  transform: mobileMenuOpen ? "translateY(0)" : "translateY(-10px)",
+                  transition: "all 0.35s cubic-bezier(0.65, 0.05, 0.1, 1) 0.1s",
+                }}
+              >
                 {t.my.quickLinks}
               </h3>
               <div className="flex flex-col gap-1">
-                {quickLinks.map((link) => (
+                {quickLinks.map((link, index) => (
                   <a
                     key={link.href}
                     href={link.href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-sm font-medium text-foreground/70 hover:text-primary hover:bg-primary/5 transition-all duration-200 px-4 py-3 rounded-lg flex items-center justify-between group border border-transparent hover:border-primary/20"
+                    className="text-sm font-medium text-foreground/70 hover:text-primary hover:bg-primary/5 px-4 py-3 rounded-lg flex items-center justify-between group border border-transparent hover:border-primary/20"
+                    style={{
+                      opacity: mobileMenuOpen ? 1 : 0,
+                      transform: mobileMenuOpen ? "translateY(0)" : "translateY(-10px)",
+                      transition: "all 0.35s cubic-bezier(0.65, 0.05, 0.1, 1) 0.1s",
+                    }}
                   >
                     <span>{link.label}</span>
                     <ExternalLink className="h-4 w-4 opacity-50 group-hover:opacity-100 transition-opacity" />
@@ -252,6 +279,11 @@ export function Navigation() {
                   "w-full justify-start text-sm font-medium",
                   isConnected ? "border-primary/30 hover:bg-primary/10" : "bg-primary hover:bg-primary/90",
                 )}
+                style={{
+                  opacity: mobileMenuOpen ? 1 : 0,
+                  transform: mobileMenuOpen ? "translateY(0)" : "translateY(-10px)",
+                  transition: "all 0.35s cubic-bezier(0.65, 0.05, 0.1, 1) 0.1s",
+                }}
               >
                 {isConnected ? (
                   <>
@@ -272,6 +304,11 @@ export function Navigation() {
                   setLanguage(language === "en" ? "zh" : "en")
                 }}
                 className="w-full justify-start text-sm font-medium border-primary/30 hover:bg-primary/10"
+                style={{
+                  opacity: mobileMenuOpen ? 1 : 0,
+                  transform: mobileMenuOpen ? "translateY(0)" : "translateY(-10px)",
+                  transition: "all 0.35s cubic-bezier(0.65, 0.05, 0.1, 1) 0.1s",
+                }}
               >
                 <Globe className="mr-2 h-4 w-4" />
                 {language === "en" ? "切换到中文" : "Switch to English"}

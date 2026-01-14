@@ -59,18 +59,16 @@ function Button({
       data-size={size}
       className={cn(buttonVariants({ variant, size, className }))}
       whileHover={{
-        scale: 1.08,
-        y: -3,
+        scale: 1.05,
+        y: -2,
       }}
       whileTap={{
-        scale: 0.93,
+        scale: 0.95,
         y: 0,
       }}
       transition={{
-        type: "spring",
-        stiffness: 600,
-        damping: 20,
-        mass: 0.3,
+        duration: 0.35,
+        ease: [0.65, 0.05, 0.1, 1],
       }}
       {...props}
     />

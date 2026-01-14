@@ -3,5 +3,12 @@
 import type React from "react"
 
 export default function Template({ children }: { children: React.ReactNode }) {
-  return <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">{children}</div>
+  return (
+    <div 
+      className="page-enter"
+      style={{ animationTimingFunction: "cubic-bezier(0.65, 0.05, 0.1, 1)" }}
+    >
+      {children}
+    </div>
+  )
 }

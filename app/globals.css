@@ -38,6 +38,7 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+  --cubic-bezier: cubic-bezier(0.65, 0.05, 0.1, 1);
 }
 
 .dark {
@@ -122,15 +123,55 @@
   body {
     @apply bg-background text-foreground;
   }
+  
+  /* 全局丝滑动画 */
+  *,
+  *::before,
+  *::after {
+    transition-timing-function: var(--cubic-bezier);
+  }
+  
+  /* 按钮、链接等交互元素的默认过渡 */
+  button,
+  a,
+  input,
+  select,
+  textarea,
+  [role="button"] {
+    transition: all 0.3s var(--cubic-bezier);
+  }
 }
 
 @layer utilities {
   .animate-float {
-    animation: float 6s ease-in-out infinite;
+    animation: float 6s var(--cubic-bezier) infinite;
   }
 
   .animate-glow {
-    animation: glow 2s ease-in-out infinite alternate;
+    animation: glow 2s var(--cubic-bezier) infinite alternate;
+  }
+  
+  /* 丝滑弹出动画 */
+  .animate-smooth-in {
+    animation: smoothIn 0.4s var(--cubic-bezier) forwards;
+  }
+  
+  .animate-smooth-out {
+    animation: smoothOut 0.3s var(--cubic-bezier) forwards;
+  }
+  
+  /* 缩放弹出 */
+  .animate-scale-in {
+    animation: scaleIn 0.35s var(--cubic-bezier) forwards;
+  }
+  
+  /* 滑入动画 */
+  .animate-slide-up {
+    animation: slideUp 0.4s var(--cubic-bezier) forwards;
+  }
+  
+  .animate-slide-down {
+    animation: slideDown 0.35s var(--cubic-bezier) forwards;
   }
 
   .delay-1000 {
@@ -154,6 +195,87 @@
     to {
       box-shadow: 0 0 40px rgba(212, 175, 55, 0.6);
     }
+  }
+  
+  @keyframes smoothIn {
+    from {
+      opacity: 0;
+      transform: translateY(-10px) scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+  
+  @keyframes smoothOut {
+    from {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+    to {
+      opacity: 0;
+      transform: translateY(-10px) scale(0.95);
+    }
+  }
+  
+  @keyframes scaleIn {
+    from {
+      opacity: 0;
+      transform: scale(0.9);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+  
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  /* 页面入场动画 */
+  .page-enter {
+    animation: pageEnter 0.6s var(--cubic-bezier) forwards;
+  }
+  
+  @keyframes pageEnter {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  /* 滚动触发动画增强 */
+  .scroll-animate {
+    transition: all 0.6s var(--cubic-bezier);
+  }
+  
+  /* Hover 光晕效果 */
+  .hover-glow:hover {
+    box-shadow: 0 0 30px rgba(212, 175, 55, 0.4);
   }
 
   .text-gold {
