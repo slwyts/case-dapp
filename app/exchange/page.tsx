@@ -3,76 +3,255 @@
 import { useState } from "react"
 import { useLanguage } from "@/hooks/use-language"
 import { useWallet } from "@/hooks/use-wallet"
+import { useSwap } from "@/hooks/use-swap"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { ArrowDownUp, Wallet, Zap, Shield, TrendingUp } from "lucide-react"
+import { ArrowDownUp, Wallet, Zap, Shield, TrendingUp, Loader2, ChevronDown } from "lucide-react"
 import { toast } from "sonner"
+import { saveTransaction } from "@/lib/transactions"
+import { SUPPORTED_TOKENS, formatTokenAmount } from "@/lib/swap"
+
+// CASE Token Logo SVG
+function CaseLogo({ size = 20 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="50" cy="50" r="50" fill="#6366f1"/>
+      <text x="50" y="58" textAnchor="middle" fill="white" fontSize="32" fontWeight="bold" fontFamily="Arial, sans-serif">C</text>
+    </svg>
+  )
+}
+
+// USDT Logo SVG
+function UsdtLogo({ size = 20 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="50" cy="50" r="50" fill="#26A17B"/>
+      <path d="M55.2 52.5v-0.1c-0.3 0-1.8 0.1-5.2 0.1-2.7 0-4.5-0.1-5.1-0.1v0.1c-10.1-0.4-17.6-2.1-17.6-4.1s7.5-3.7 17.6-4.1v6.5c0.6 0 2.5 0.1 5.2 0.1 3.2 0 4.8-0.1 5.1-0.1v-6.5c10.1 0.4 17.5 2.1 17.5 4.1s-7.5 3.7-17.5 4.1zm0-8.9v-5.8h14.5v-9h-39.5v9h14.5v5.8c-11.4 0.5-20 2.7-20 5.3s8.6 4.8 20 5.3v19h10.5v-19c11.4-0.5 19.9-2.7 19.9-5.3s-8.5-4.8-19.9-5.3z" fill="white"/>
+    </svg>
+  )
+}
+
+// Token Icon 组件
+function TokenIcon({ token, size = 20 }: { token: string; size?: number }) {
+  const tokenConfig = SUPPORTED_TOKENS[token]
+  if (tokenConfig?.logo === "usdt") {
+    return <UsdtLogo size={size} />
+  }
+  return <CaseLogo size={size} />
+}
+
+// 代币选择器组件
+function TokenSelector({ 
+  token, 
+  onSelect, 
+  disabled = false,
+  excludeToken,
+}: { 
+  token: string
+  onSelect: (token: string) => void
+  disabled?: boolean
+  excludeToken?: string
+}) {
+  const [isOpen, setIsOpen] = useState(false)
+  const availableTokens = Object.keys(SUPPORTED_TOKENS).filter(t => t !== excludeToken)
+
+  return (
+    <div className="relative">
+      <Button
+        variant="outline"
+        onClick={() => !disabled && setIsOpen(!isOpen)}
+        className="w-28 h-12 border-primary/30 text-foreground hover:bg-primary hover:text-primary-foreground font-semibold bg-transparent transition-colors flex items-center gap-2 justify-between"
+        disabled={disabled}
+      >
+        <div className="flex items-center gap-2">
+          <TokenIcon token={token} size={20} />
+          <span>{token}</span>
+        </div>
+        <ChevronDown className="h-4 w-4" />
+      </Button>
+      
+      {isOpen && (
+        <>
+          <div 
+            className="fixed inset-0 z-10" 
+            onClick={() => setIsOpen(false)} 
+          />
+          <div className="absolute top-full mt-1 right-0 z-20 bg-card border border-primary/30 rounded-lg shadow-xl overflow-hidden min-w-[140px]">
+            {availableTokens.map((t) => {
+              const config = SUPPORTED_TOKENS[t]
+              return (
+                <button
+                  key={t}
+                  onClick={() => {
+                    onSelect(t)
+                    setIsOpen(false)
+                  }}
+                  className="w-full flex items-center gap-2 px-3 py-2 hover:bg-primary/10 transition-colors text-left"
+                >
+                  <TokenIcon token={t} size={20} />
+                  <div>
+                    <p className="font-medium text-sm">{t}</p>
+                    <p className="text-xs text-muted-foreground">{config?.name}</p>
+                  </div>
+                </button>
+              )
+            })}
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
 
 export default function ExchangePage() {
   const { t } = useLanguage()
-  const { isConnected } = useWallet()
+  const { isConnected, fullAddress, isCorrectChain, switchToPolygon } = useWallet()
   const [fromAmount, setFromAmount] = useState("")
-  const [toAmount, setToAmount] = useState("")
-  const [fromToken, setFromToken] = useState<"CASE" | "USDT">("CASE")
-  const [toToken, setToToken] = useState<"CASE" | "USDT">("USDT")
+  const [fromToken, setFromToken] = useState<string>("CASE")
+  const [toToken, setToToken] = useState<string>("USDT")
   const [isSwapping, setIsSwapping] = useState(false)
   const [isAnimating, setIsAnimating] = useState(false)
 
-  const exchangeRate = 0.5
-  const balance = { CASE: "10,000", USDT: "5,000" }
+  // 使用 swap hook
+  const {
+    fromBalanceFormatted,
+    toBalanceFormatted,
+    fromBalance,
+    estimatedOutputFormatted,
+    exchangeRate,
+    isLoadingQuote,
+    needsApproval,
+    isApproving,
+    approve,
+    swap,
+    refetchBalances,
+  } = useSwap({
+    fromToken,
+    toToken,
+    fromAmount,
+    userAddress: fullAddress,
+  })
 
+  // 切换代币
   const handleSwapTokens = () => {
     setIsAnimating(true)
-
     setTimeout(() => {
+      const tempToken = fromToken
       setFromToken(toToken)
-      setToToken(fromToken)
-      setFromAmount(toAmount)
-      setToAmount(fromAmount)
+      setToToken(tempToken)
+      setFromAmount("")
       setIsAnimating(false)
     }, 300)
   }
 
+  // 输入金额变化
   const handleFromAmountChange = (value: string) => {
+    // 只允许数字和小数点
+    if (value && !/^\d*\.?\d*$/.test(value)) return
     setFromAmount(value)
-    if (value) {
-      const numValue = Number.parseFloat(value)
-      if (fromToken === "CASE") {
-        setToAmount((numValue * exchangeRate).toFixed(2))
-      } else {
-        setToAmount((numValue / exchangeRate).toFixed(2))
-      }
-    } else {
-      setToAmount("")
+  }
+
+  // 点击 MAX
+  const handleMaxClick = () => {
+    if (fromBalance) {
+      const tokenConfig = SUPPORTED_TOKENS[fromToken]
+      const maxAmount = formatTokenAmount(fromBalance, tokenConfig?.decimals || 18, tokenConfig?.decimals || 18)
+      setFromAmount(maxAmount.replace(/,/g, ""))
     }
   }
 
-  const handleMaxClick = () => {
-    const maxBalance = fromToken === "CASE" ? balance.CASE : balance.USDT
-    handleFromAmountChange(maxBalance.replace(",", ""))
+  // 授权
+  const handleApprove = async () => {
+    try {
+      await approve()
+      toast.success("Approval successful!")
+    } catch (error) {
+      console.error("Approve error:", error)
+      const message = error instanceof Error ? error.message : "Approval failed"
+      toast.error(message)
+    }
   }
 
-  const handleSwap = () => {
-    if (!fromAmount || Number.parseFloat(fromAmount) <= 0) {
+  // 执行闪兑
+  const handleSwap = async () => {
+    if (!fromAmount || Number(fromAmount) <= 0) {
       toast.error(t.exchange.invalidAmount)
       return
     }
+
+    if (!isCorrectChain) {
+      try {
+        await switchToPolygon()
+      } catch {
+        toast.error("Please switch to Polygon network")
+        return
+      }
+    }
+
     setIsSwapping(true)
-    setTimeout(() => {
+    try {
+      const txHash = await swap()
+      
+      // 保存交易记录
+      if (fullAddress) {
+        saveTransaction(fullAddress, {
+          txHash,
+          type: "swap",
+          amount: fromAmount,
+          fromToken,
+          toToken,
+          fromAmount,
+          toAmount: estimatedOutputFormatted,
+          timestamp: Date.now(),
+          status: "completed",
+        })
+      }
+
       toast.success(
         t.exchange.swapSuccess
           .replace("{from}", fromAmount)
           .replace("{fromToken}", fromToken)
-          .replace("{to}", toAmount)
+          .replace("{to}", estimatedOutputFormatted)
           .replace("{toToken}", toToken),
       )
+      
       setFromAmount("")
-      setToAmount("")
+      refetchBalances()
+    } catch (error) {
+      console.error("Swap error:", error)
+      const message = error instanceof Error ? error.message : "Swap failed"
+      toast.error(message)
+    } finally {
       setIsSwapping(false)
-    }, 1500)
+    }
   }
+
+  // 获取按钮状态
+  const getButtonState = () => {
+    if (!isConnected) {
+      return { disabled: true, text: "Connect Wallet in Navbar", icon: <Wallet className="h-5 w-5" /> }
+    }
+    if (!isCorrectChain) {
+      return { disabled: false, text: "Switch to Polygon", icon: null, onClick: switchToPolygon }
+    }
+    if (isApproving) {
+      return { disabled: true, text: "Approving...", icon: <Loader2 className="h-5 w-5 animate-spin" /> }
+    }
+    if (needsApproval && fromAmount) {
+      return { disabled: false, text: `Approve ${fromToken}`, icon: null, onClick: handleApprove }
+    }
+    if (isSwapping) {
+      return { disabled: true, text: t.exchange.swapping, icon: <Loader2 className="h-5 w-5 animate-spin" /> }
+    }
+    if (!fromAmount || Number(fromAmount) <= 0) {
+      return { disabled: true, text: t.exchange.swapNow, icon: null }
+    }
+    return { disabled: false, text: t.exchange.swapNow, icon: null, onClick: handleSwap }
+  }
+
+  const buttonState = getButtonState()
 
   return (
     <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center px-4 py-12">
@@ -110,18 +289,20 @@ export default function ExchangePage() {
                 <Label className="text-sm text-muted-foreground">{t.exchange.from}</Label>
                 {isConnected && (
                   <span className="text-xs text-muted-foreground">
-                    {t.exchange.balance}: {fromToken === "CASE" ? balance.CASE : balance.USDT} {fromToken}
+                    {t.exchange.balance}: {fromBalanceFormatted} {fromToken}
                   </span>
                 )}
               </div>
               <div className="flex gap-2">
                 <div className="relative flex-1">
                   <Input
-                    type="number"
+                    type="text"
+                    inputMode="decimal"
                     placeholder="0.00"
                     value={fromAmount}
                     onChange={(e) => handleFromAmountChange(e.target.value)}
                     className="h-12 text-lg border-primary/20 focus-visible:ring-primary pr-16 flex-1"
+                    disabled={isSwapping || isApproving}
                   />
                   {isConnected && (
                     <Button
@@ -129,17 +310,18 @@ export default function ExchangePage() {
                       variant="ghost"
                       onClick={handleMaxClick}
                       className="absolute right-2 top-1/2 -translate-y-1/2 text-primary hover:text-primary hover:bg-primary/10 text-xs"
+                      disabled={isSwapping || isApproving}
                     >
                       MAX
                     </Button>
                   )}
                 </div>
-                <Button
-                  variant="outline"
-                  className="w-24 h-12 border-primary/30 text-foreground hover:bg-primary hover:text-primary-foreground font-semibold bg-transparent transition-colors"
-                >
-                  {fromToken}
-                </Button>
+                <TokenSelector
+                  token={fromToken}
+                  onSelect={setFromToken}
+                  excludeToken={toToken}
+                  disabled={isSwapping || isApproving}
+                />
               </div>
             </div>
 
@@ -149,6 +331,7 @@ export default function ExchangePage() {
                 size="icon"
                 variant="outline"
                 onClick={handleSwapTokens}
+                disabled={isSwapping || isApproving}
                 className="rounded-full h-10 w-10 border-primary/30 hover:bg-primary hover:text-secondary-foreground transition-all hover:rotate-180 duration-300 bg-transparent"
               >
                 <ArrowDownUp className="h-4 w-4" />
@@ -165,34 +348,36 @@ export default function ExchangePage() {
                 <Label className="text-sm text-muted-foreground">{t.exchange.to}</Label>
                 {isConnected && (
                   <span className="text-xs text-muted-foreground">
-                    {t.exchange.balance}: {toToken === "CASE" ? balance.CASE : balance.USDT} {toToken}
+                    {t.exchange.balance}: {toBalanceFormatted} {toToken}
                   </span>
                 )}
               </div>
               <div className="flex gap-2">
-                <Input
-                  type="number"
-                  placeholder="0.00"
-                  value={toAmount}
-                  readOnly
-                  className="flex-1 h-12 text-lg border-primary/20 bg-muted/50"
+                <div className="relative flex-1">
+                  <Input
+                    type="text"
+                    placeholder="0.00"
+                    value={isLoadingQuote ? "..." : estimatedOutputFormatted !== "0" ? estimatedOutputFormatted : ""}
+                    readOnly
+                    className="flex-1 h-12 text-lg border-primary/20 bg-muted/50"
+                  />
+                </div>
+                <TokenSelector
+                  token={toToken}
+                  onSelect={setToToken}
+                  excludeToken={fromToken}
+                  disabled={isSwapping || isApproving}
                 />
-                <Button
-                  variant="outline"
-                  className="w-24 h-12 border-primary/30 text-foreground hover:bg-primary hover:text-primary-foreground font-semibold bg-transparent transition-colors"
-                >
-                  {toToken}
-                </Button>
               </div>
             </div>
 
             {/* Exchange Rate */}
-            {fromAmount && (
+            {fromAmount && exchangeRate > 0 && (
               <div className="p-3 rounded-lg bg-primary/5 border border-primary/10 animate-in fade-in duration-300">
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">{t.exchange.rate}:</span>
                   <span className="text-primary font-semibold">
-                    1 {fromToken} = {fromToken === "CASE" ? exchangeRate : 1 / exchangeRate} {toToken}
+                    1 {fromToken} ≈ {exchangeRate.toFixed(6)} {toToken}
                   </span>
                 </div>
               </div>
@@ -201,24 +386,20 @@ export default function ExchangePage() {
             {/* Action Button */}
             <Button
               size="lg"
-              onClick={handleSwap}
-              disabled={!isConnected || isSwapping || !fromAmount}
+              onClick={buttonState.onClick}
+              disabled={buttonState.disabled}
               className="w-full h-12 font-semibold shadow-lg transition-transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
             >
-              {!isConnected ? (
-                <span className="flex items-center gap-2">
-                  <Wallet className="h-5 w-5" />
-                  Connect Wallet in Navbar
-                </span>
-              ) : isSwapping ? (
-                <span className="flex items-center gap-2">
-                  <span className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                  {t.exchange.swapping}
-                </span>
-              ) : (
-                t.exchange.swapNow
-              )}
+              <span className="flex items-center gap-2">
+                {buttonState.icon}
+                {buttonState.text}
+              </span>
             </Button>
+            
+            {/* Powered by */}
+            <p className="text-xs text-center text-muted-foreground">
+              Powered by QuickSwap V2
+            </p>
           </CardContent>
         </Card>
 
