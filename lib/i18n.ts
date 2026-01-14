@@ -13,6 +13,7 @@ export const translations = {
       exchange: "Exchange",
       my: "My",
       connectWallet: "Connect Wallet",
+      navigation: "Navigation",
     },
     hero: {
       welcome: "Welcome to",
@@ -223,6 +224,7 @@ export const translations = {
       exchange: "兑换",
       my: "我的",
       connectWallet: "连接钱包",
+      navigation: "导航",
     },
     hero: {
       welcome: "欢迎来到",

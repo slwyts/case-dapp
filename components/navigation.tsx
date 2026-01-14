@@ -204,7 +204,7 @@ export function Navigation() {
                   transition: "all 0.35s cubic-bezier(0.65, 0.05, 0.1, 1) 0.1s",
                 }}
               >
-                {t.nav.home}
+                {t.nav.navigation}
               </h3>
               <div className="flex flex-col gap-1">
                 {navLinks.map((link, index) => (
@@ -311,7 +311,7 @@ export function Navigation() {
                 }}
               >
                 <Globe className="mr-2 h-4 w-4" />
-                {language === "en" ? "切换到中文" : "Switch to English"}
+                {language === "en" ? "语言切换" : "Switch Language"}
               </Button>
             </div>
           </div>
