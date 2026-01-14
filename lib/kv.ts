@@ -11,9 +11,11 @@ const PUSH_RECORDS_PREFIX = "push:"
 // 订单记录类型
 export interface OrderRecord {
   orderId: string
+  type: "push" | "withdraw"
   amount: number
   timestamp: number
   createdAt: number
+  txHash?: string  // 提现时有 txHash
 }
 
 // 提现记录类型

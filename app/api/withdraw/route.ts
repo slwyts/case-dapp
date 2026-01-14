@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { createWalletClient, createPublicClient, http, parseUnits } from "viem"
 import { polygon } from "viem/chains"
 import { privateKeyToAccount } from "viem/accounts"
-import { getDappBalance, getNonce, setDappBalance, incrementNonce, addWithdrawalRecord } from "@/lib/kv"
+import { getDappBalance, getNonce, setDappBalance, incrementNonce, addWithdrawalRecord, addOrderRecord } from "@/lib/kv"
 import { erc20Abi, CASE_DECIMALS } from "@/lib/case-token"
 
 interface WithdrawRequest {
@@ -127,6 +127,16 @@ export async function POST(request: NextRequest) {
       amount: balance,
       txHash,
       timestamp: Date.now(),
+    })
+
+    // 4. 记录到订单列表（用于前端显示）
+    await addOrderRecord(address, {
+      orderId: `withdraw-${txHash}`,
+      type: "withdraw",
+      amount: balance,
+      timestamp: Date.now(),
+      createdAt: Date.now(),
+      txHash,
     })
 
     return NextResponse.json({

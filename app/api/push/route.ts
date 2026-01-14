@@ -118,6 +118,7 @@ export async function POST(request: NextRequest) {
     // 4. 记录订单到用户记录
     await addOrderRecord(address, {
       orderId,
+      type: "push",
       amount,
       timestamp,
       createdAt: Date.now(),

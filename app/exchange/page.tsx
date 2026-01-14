@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import Image from "next/image"
 import { useLanguage } from "@/hooks/use-language"
 import { useWallet } from "@/hooks/use-wallet"
 import { useSwap } from "@/hooks/use-swap"
@@ -13,13 +14,16 @@ import { toast } from "sonner"
 import { saveTransaction } from "@/lib/transactions"
 import { SUPPORTED_TOKENS, formatTokenAmount } from "@/lib/swap"
 
-// CASE Token Logo SVG
+// CASE Token Logo - 使用 logo.png
 function CaseLogo({ size = 20 }: { size?: number }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="50" cy="50" r="50" fill="#6366f1"/>
-      <text x="50" y="58" textAnchor="middle" fill="white" fontSize="32" fontWeight="bold" fontFamily="Arial, sans-serif">C</text>
-    </svg>
+    <Image
+      src="/logo.png"
+      alt="CASE"
+      width={size}
+      height={size}
+      className="rounded-full"
+    />
   )
 }
 
@@ -47,15 +51,13 @@ function TokenSelector({
   token, 
   onSelect, 
   disabled = false,
-  excludeToken,
 }: { 
   token: string
   onSelect: (token: string) => void
   disabled?: boolean
-  excludeToken?: string
 }) {
   const [isOpen, setIsOpen] = useState(false)
-  const availableTokens = Object.keys(SUPPORTED_TOKENS).filter(t => t !== excludeToken)
+  const availableTokens = Object.keys(SUPPORTED_TOKENS)
 
   return (
     <div className="relative">
@@ -75,12 +77,11 @@ function TokenSelector({
       {isOpen && (
         <>
           <div 
-            className="fixed inset-0 z-10" 
+            className="fixed inset-0 z-[100]" 
             onClick={() => setIsOpen(false)} 
           />
-          <div className="absolute top-full mt-1 right-0 z-20 bg-card border border-primary/30 rounded-lg shadow-xl overflow-hidden min-w-[140px]">
+          <div className="absolute top-full mt-1 left-0 right-0 z-[101] bg-card border border-primary/30 rounded-lg shadow-2xl overflow-hidden">
             {availableTokens.map((t) => {
-              const config = SUPPORTED_TOKENS[t]
               return (
                 <button
                   key={t}
@@ -91,10 +92,7 @@ function TokenSelector({
                   className="w-full flex items-center gap-2 px-3 py-2 hover:bg-primary/10 transition-colors text-left"
                 >
                   <TokenIcon token={t} size={20} />
-                  <div>
-                    <p className="font-medium text-sm">{t}</p>
-                    <p className="text-xs text-muted-foreground">{config?.name}</p>
-                  </div>
+                  <span className="font-medium text-sm">{t}</span>
                 </button>
               )
             })}
@@ -293,7 +291,7 @@ export default function ExchangePage() {
                   </span>
                 )}
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 items-center">
                 <div className="relative flex-1">
                   <Input
                     type="text"
@@ -318,8 +316,13 @@ export default function ExchangePage() {
                 </div>
                 <TokenSelector
                   token={fromToken}
-                  onSelect={setFromToken}
-                  excludeToken={toToken}
+                  onSelect={(t) => {
+                    if (t === toToken) {
+                      // 如果选了对方的币，交换两个代币
+                      setToToken(fromToken)
+                    }
+                    setFromToken(t)
+                  }}
                   disabled={isSwapping || isApproving}
                 />
               </div>
@@ -352,7 +355,7 @@ export default function ExchangePage() {
                   </span>
                 )}
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 items-center">
                 <div className="relative flex-1">
                   <Input
                     type="text"
@@ -364,8 +367,13 @@ export default function ExchangePage() {
                 </div>
                 <TokenSelector
                   token={toToken}
-                  onSelect={setToToken}
-                  excludeToken={fromToken}
+                  onSelect={(t) => {
+                    if (t === fromToken) {
+                      // 如果选了对方的币，交换两个代币
+                      setFromToken(toToken)
+                    }
+                    setToToken(t)
+                  }}
                   disabled={isSwapping || isApproving}
                 />
               </div>

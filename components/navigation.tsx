@@ -4,7 +4,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
-import { Moon, Sun, Menu, X, Wallet, LogOut, ExternalLink, ChevronRight } from "lucide-react"
+import { Moon, Sun, Menu, X, Wallet, LogOut, ExternalLink, ChevronRight, Globe } from "lucide-react"
 import { useLanguage } from "@/hooks/use-language"
 import { useTheme } from "@/hooks/use-theme"
 import { useWallet } from "@/hooks/use-wallet"
@@ -81,6 +81,21 @@ export function Navigation() {
                   {link.label}
                 </Link>
               ))}
+              {/* PC端快捷链接 */}
+              <div className="border-l border-primary/20 ml-2 pl-2 flex items-center gap-1">
+                {quickLinks.map((link) => (
+                  <a
+                    key={link.href}
+                    href={link.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm font-medium text-foreground/70 hover:text-primary hover:bg-primary/5 transition-all duration-300 px-3 py-2 rounded-lg flex items-center gap-1"
+                  >
+                    {link.label}
+                    <ExternalLink className="h-3 w-3" />
+                  </a>
+                ))}
+              </div>
             </div>
 
             {/* Actions */}
@@ -251,7 +266,6 @@ export function Navigation() {
                 )}
               </Button>
 
-              {/* Language Toggle */}
               <Button
                 variant="outline"
                 onClick={() => {
@@ -259,7 +273,7 @@ export function Navigation() {
                 }}
                 className="w-full justify-start text-sm font-medium border-primary/30 hover:bg-primary/10"
               >
-                <span className="mr-2">🌐</span>
+                <Globe className="mr-2 h-4 w-4" />
                 {language === "en" ? "切换到中文" : "Switch to English"}
               </Button>
             </div>
