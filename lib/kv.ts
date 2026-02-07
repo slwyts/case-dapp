@@ -7,6 +7,11 @@ const ORDERS_PREFIX = "orders:"
 const PROCESSED_ORDERS_KEY = "processed_orders"
 const WITHDRAWALS_PREFIX = "withdrawals:"
 const PUSH_RECORDS_PREFIX = "push:"
+const PARTNER_TOKEN_KEY = "partner:token"
+const BINDING_BY_ADDRESS_PREFIX = "binding:address:"
+const BINDING_BY_USER_PREFIX = "binding:user:"
+const ASSET_PROCESSED_PREFIX = "asset:processed:"
+const ASSET_LAST_SYNC_PREFIX = "asset:lastsync:"
 
 // 订单记录类型
 export interface OrderRecord {
@@ -33,6 +38,20 @@ export interface PushRecord {
   timestamp: number
   signature: string
   processedAt: number
+}
+
+export interface BindingRecord {
+  userId: string
+  address: string
+  boundAt: number
+}
+
+export interface PartnerTokenCache {
+  accessToken: string
+  tokenType: string
+  expiresAt: number
+  clientName?: string
+  permissions?: string
 }
 
 // 获取用户 Dapp 余额
@@ -118,4 +137,61 @@ export async function getPushRecord(orderId: string): Promise<PushRecord | null>
   const record = await kv.get<string>(key)
   if (!record) return null
   return typeof record === "string" ? JSON.parse(record) : record
+}
+
+// 获取项目方 token 缓存
+export async function getPartnerTokenCache(): Promise<PartnerTokenCache | null> {
+  const record = await kv.get<string>(PARTNER_TOKEN_KEY)
+  if (!record) return null
+  return typeof record === "string" ? JSON.parse(record) : record
+}
+
+// 设置项目方 token 缓存
+export async function setPartnerTokenCache(token: PartnerTokenCache): Promise<void> {
+  await kv.set(PARTNER_TOKEN_KEY, JSON.stringify(token))
+}
+
+// 绑定关系
+export async function setBinding(record: BindingRecord): Promise<void> {
+  const addressKey = `${BINDING_BY_ADDRESS_PREFIX}${record.address.toLowerCase()}`
+  const userKey = `${BINDING_BY_USER_PREFIX}${record.userId}`
+  await kv.set(addressKey, JSON.stringify(record))
+  await kv.set(userKey, JSON.stringify(record))
+}
+
+export async function getBindingByAddress(address: string): Promise<BindingRecord | null> {
+  const key = `${BINDING_BY_ADDRESS_PREFIX}${address.toLowerCase()}`
+  const record = await kv.get<string>(key)
+  if (!record) return null
+  return typeof record === "string" ? JSON.parse(record) : record
+}
+
+export async function getBindingByUserId(userId: string): Promise<BindingRecord | null> {
+  const key = `${BINDING_BY_USER_PREFIX}${userId}`
+  const record = await kv.get<string>(key)
+  if (!record) return null
+  return typeof record === "string" ? JSON.parse(record) : record
+}
+
+// 资产幂等处理
+export async function isAssetProcessed(address: string, assetId: string): Promise<boolean> {
+  const key = `${ASSET_PROCESSED_PREFIX}${address.toLowerCase()}`
+  const result = await kv.sismember(key, assetId)
+  return result === 1
+}
+
+export async function markAssetProcessed(address: string, assetId: string): Promise<void> {
+  const key = `${ASSET_PROCESSED_PREFIX}${address.toLowerCase()}`
+  await kv.sadd(key, assetId)
+}
+
+export async function getLastAssetSync(address: string): Promise<number> {
+  const key = `${ASSET_LAST_SYNC_PREFIX}${address.toLowerCase()}`
+  const value = await kv.get<number>(key)
+  return value || 0
+}
+
+export async function setLastAssetSync(address: string, timestamp: number): Promise<void> {
+  const key = `${ASSET_LAST_SYNC_PREFIX}${address.toLowerCase()}`
+  await kv.set(key, timestamp)
 }

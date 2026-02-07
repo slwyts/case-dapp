@@ -23,6 +23,12 @@ interface DappOrder {
   type: "push" | "withdraw"
 }
 
+interface BindingInfo {
+  userId: string
+  address: string
+  boundAt: number
+}
+
 interface WithdrawModalProps {
   showWithdraw: boolean
   withdrawAnimating: boolean
@@ -353,6 +359,12 @@ export default function MyPage() {
   const [isLoadingDapp, setIsLoadingDapp] = useState(false)
   const [isWithdrawing, setIsWithdrawing] = useState(false)
 
+  // 商城绑定相关状态
+  const [bindUserId, setBindUserId] = useState("")
+  const [bindingInfo, setBindingInfo] = useState<BindingInfo | null>(null)
+  const [isBinding, setIsBinding] = useState(false)
+  const [isSyncingAssets, setIsSyncingAssets] = useState(false)
+
   // 本地交易记录状态
   const [localTransactions, setLocalTransactions] = useState<LocalTransaction[]>([])
 
@@ -388,15 +400,71 @@ export default function MyPage() {
     }
   }, [fullAddress])
 
+  // 获取绑定状态
+  const fetchBinding = useCallback(async () => {
+    if (!fullAddress) return
+    try {
+      const res = await fetch(`/api/bind?address=${fullAddress}`)
+      const data = await res.json()
+      if (res.ok && data.bound) {
+        setBindingInfo(data.binding)
+      } else {
+        setBindingInfo(null)
+      }
+    } catch (error) {
+      console.error("Failed to fetch binding info:", error)
+    }
+  }, [fullAddress])
+
   // 连接钱包后获取 Dapp 余额
   useEffect(() => {
     if (isConnected && fullAddress) {
       fetchDappBalance()
+      fetchBinding()
     }
-  }, [isConnected, fullAddress, fetchDappBalance])
+  }, [isConnected, fullAddress, fetchDappBalance, fetchBinding])
+
+  // 同步项目方资产
+  const syncAssets = useCallback(
+    async (silent: boolean = false) => {
+      if (!fullAddress || !bindingInfo) return
+      if (!silent) {
+        setIsSyncingAssets(true)
+      }
+      try {
+        const res = await fetch("/api/assets/sync", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ address: fullAddress }),
+        })
+        const data = await res.json()
+        if (res.ok && data.success) {
+          if (!silent) {
+            toast.success(t.my.syncAssetsSuccess)
+          }
+          if (data.newRecords > 0) {
+            fetchDappBalance()
+          }
+        } else if (!silent) {
+          toast.error(data.error || t.my.syncAssetsFailed)
+        }
+      } catch (error) {
+        console.error("Asset sync error:", error)
+        if (!silent) {
+          toast.error(t.my.syncAssetsFailed)
+        }
+      } finally {
+        if (!silent) {
+          setIsSyncingAssets(false)
+        }
+      }
+    },
+    [bindingInfo, fetchDappBalance, fullAddress, t]
+  )
 
   // 刷新所有余额
   const handleRefreshBalance = async () => {
+    await syncAssets(true)
     await Promise.all([fetchDappBalance(), refetchWalletBalance()])
     toast.success(t.my.refreshing)
   }
@@ -429,6 +497,37 @@ export default function MyPage() {
   const closeWithdrawModal = () => {
     setWithdrawAnimating(false)
     setTimeout(() => setShowWithdraw(false), 300)
+  }
+
+  const handleBind = async () => {
+    if (!fullAddress) return
+    if (!bindUserId.trim()) {
+      toast.error(t.my.bindRequired)
+      return
+    }
+
+    setIsBinding(true)
+    try {
+      const res = await fetch("/api/bind", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: bindUserId.trim(), address: fullAddress }),
+      })
+
+      const data = await res.json()
+      if (res.ok && data.success) {
+        setBindingInfo(data.binding)
+        setBindUserId("")
+        toast.success(t.my.bindSuccess)
+      } else {
+        toast.error(data.error || t.my.bindFailed)
+      }
+    } catch (error) {
+      console.error("Bind error:", error)
+      toast.error(t.my.bindFailed)
+    } finally {
+      setIsBinding(false)
+    }
   }
 
   const handleCopyAddress = () => {
@@ -582,6 +681,86 @@ export default function MyPage() {
       />
 
       <div className="container mx-auto max-w-4xl space-y-6">
+        <Card className="border-primary/20 bg-card/80 backdrop-blur">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center justify-between text-lg text-primary">
+              <span>{t.my.mallBinding}</span>
+              <Badge
+                variant="outline"
+                className={cn(
+                  "text-xs",
+                  bindingInfo ? "border-green-500/50 text-green-400" : "border-yellow-500/50 text-yellow-400",
+                )}
+              >
+                {bindingInfo ? t.my.boundLabel : t.my.notBound}
+              </Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-muted-foreground">{t.my.bindHint}</p>
+
+            {bindingInfo ? (
+              <div className="space-y-4">
+                <div className="space-y-1">
+                  <p className="text-sm font-medium">
+                    {t.my.boundTo.replace("{userId}", bindingInfo.userId)}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {t.my.boundAt.replace("{time}", new Date(bindingInfo.boundAt).toLocaleString())}
+                  </p>
+                </div>
+                <Button
+                  variant="outline"
+                  onClick={() => syncAssets(false)}
+                  disabled={isSyncingAssets}
+                  className="w-full bg-transparent hover:bg-primary hover:text-secondary-foreground"
+                >
+                  {isSyncingAssets ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      {t.my.syncingAssets}
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCw className="mr-2 h-4 w-4" />
+                      {t.my.syncAssets}
+                    </>
+                  )}
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <div className="space-y-2">
+                  <Label htmlFor="mallUserId" className="text-sm font-medium">
+                    {t.my.bindUserIdLabel}
+                  </Label>
+                  <Input
+                    id="mallUserId"
+                    placeholder={t.my.bindPlaceholder}
+                    value={bindUserId}
+                    onChange={(e) => setBindUserId(e.target.value)}
+                    className="bg-transparent border-border focus:border-primary"
+                    disabled={isBinding}
+                  />
+                </div>
+                <Button onClick={handleBind} className="w-full" disabled={isBinding || !bindUserId.trim()}>
+                  {isBinding ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      {t.my.binding}
+                    </>
+                  ) : (
+                    <>
+                      <Check className="mr-2 h-4 w-4" />
+                      {t.my.bindAction}
+                    </>
+                  )}
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
         <Card className="border-primary/20 bg-linear-to-br from-primary/5 to-transparent">
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-lg text-primary">

@@ -24,6 +24,13 @@ npm install
 cp .env.example .env.local
 ```
 
+其中项目方接口配置项：
+
+- `PARTNER_API_BASE_URL`：项目方接口域名
+- `PARTNER_AUTH_USERNAME`：鉴权用户名
+- `PARTNER_AUTH_PASSWORD`：鉴权密码
+- `PARTNER_CLIENT_NAME`：客户端名称
+
 3. 启动开发服务器：
 
 ```bash
