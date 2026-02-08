@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { getDappBalance, getNonce, getOrderRecords } from "@/lib/kv"
+import { getDappBalance, getNonce, getOrderRecords, getBindingByUserId } from "@/lib/kv"
 
 // 验证以太坊地址格式
 function isValidAddress(address: string): boolean {
@@ -9,7 +9,16 @@ function isValidAddress(address: string): boolean {
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
-    const address = searchParams.get("address")
+    let address = searchParams.get("address")
+    const userId = searchParams.get("userId")
+
+    if (!address && userId) {
+      const binding = await getBindingByUserId(userId)
+      address = binding?.address || null
+      if (!address) {
+        return NextResponse.json({ error: "UserId not bound" }, { status: 404 })
+      }
+    }
 
     if (!address) {
       return NextResponse.json({ error: "Missing address parameter" }, { status: 400 })
