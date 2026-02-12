@@ -462,6 +462,21 @@ export default function MyPage() {
     [bindingInfo, fetchDappBalance, fullAddress, t]
   )
 
+  // 已绑定用户：进入页面后自动后台同步一次
+  useEffect(() => {
+    if (!isConnected || !fullAddress || !bindingInfo) return
+    syncAssets(true)
+  }, [isConnected, fullAddress, bindingInfo, syncAssets])
+
+  // 已绑定用户：后台定时同步（60s）
+  useEffect(() => {
+    if (!isConnected || !fullAddress || !bindingInfo) return
+    const timer = setInterval(() => {
+      syncAssets(true)
+    }, 60_000)
+    return () => clearInterval(timer)
+  }, [isConnected, fullAddress, bindingInfo, syncAssets])
+
   // 刷新所有余额
   const handleRefreshBalance = async () => {
     await syncAssets(true)

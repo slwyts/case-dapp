@@ -6,6 +6,7 @@ import {
   getBindingByAddress,
   isAssetProcessed,
   markAssetProcessed,
+  tryAcquireAssetSyncLock,
   setLastAssetSync,
 } from "@/lib/kv"
 
@@ -62,6 +63,7 @@ export async function POST(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const body = await request.json().catch(() => ({}))
     const address = body.address || searchParams.get("address")
+    const force = Boolean(body.force || searchParams.get("force") === "1")
 
     if (!address) {
       return NextResponse.json({ error: "Missing address" }, { status: 400 })
@@ -74,6 +76,14 @@ export async function POST(request: NextRequest) {
     const binding = await getBindingByAddress(address)
     if (!binding) {
       return NextResponse.json({ error: "Address not bound" }, { status: 400 })
+    }
+
+    // 简单节流：默认 60 秒内只允许同步一次（force 可跳过）
+    if (!force) {
+      const locked = await tryAcquireAssetSyncLock(address, 60)
+      if (!locked) {
+        return NextResponse.json({ success: true, skipped: true, reason: "throttled" })
+      }
     }
 
     const token = await getPartnerAccessToken()

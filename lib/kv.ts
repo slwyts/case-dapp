@@ -12,6 +12,7 @@ const BINDING_BY_ADDRESS_PREFIX = "binding:address:"
 const BINDING_BY_USER_PREFIX = "binding:user:"
 const ASSET_PROCESSED_PREFIX = "asset:processed:"
 const ASSET_LAST_SYNC_PREFIX = "asset:lastsync:"
+const ASSET_SYNC_LOCK_PREFIX = "asset:synclock:"
 
 // 订单记录类型
 export interface OrderRecord {
@@ -194,4 +195,14 @@ export async function getLastAssetSync(address: string): Promise<number> {
 export async function setLastAssetSync(address: string, timestamp: number): Promise<void> {
   const key = `${ASSET_LAST_SYNC_PREFIX}${address.toLowerCase()}`
   await kv.set(key, timestamp)
+}
+
+// 资产同步锁：用于限制同步频率（简单节流）
+export async function tryAcquireAssetSyncLock(address: string, ttlSeconds: number): Promise<boolean> {
+  const key = `${ASSET_SYNC_LOCK_PREFIX}${address.toLowerCase()}`
+  // SET key value NX EX ttl
+  // @vercel/kv 支持底层 Redis 命令
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const result = await (kv as any).set(key, "1", { nx: true, ex: ttlSeconds })
+  return result === "OK"
 }
